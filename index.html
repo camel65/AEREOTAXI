@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aereotaxi - Metropolis</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #03050c;
+            color: #00f0ff;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .top-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 20;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(0, 240, 255, 0.15);
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            transition: all 0.2s;
+        }
+
+        .control-btn:active {
+            background: rgba(0, 240, 255, 0.4);
+            transform: scale(0.95);
+        }
+
+        #homeScreen {
+            z-index: 10;
+            background: radial-gradient(circle at center, #0a1128 0%, #03050c 100%);
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px rgba(0, 240, 255, 0.8), 0 0 60px rgba(255, 0, 128, 0.5);
+            color: #ffffff;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero-title span {
+            color: #ff007f;
+        }
+
+        .access-btn {
+            background: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
+            border: none;
+            color: #ffffff;
+            padding: 18px 45px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.6);
+            text-transform: uppercase;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .access-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(0, 240, 255, 0.9);
+        }
+
+        #simScreen {
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .hud-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 10;
+            background: rgba(5, 13, 26, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.4);
+            padding: 10px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            font-size: 10px;
+            color: #b0c4de;
+            pointer-events: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 210px;
+        }
+
+        .hud-panel h4 {
+            color: #ff007f;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            font-size: 11px;
+        }
+
+        .hud-row {
+            margin-bottom: 3px;
+        }
+
+        .hud-row span {
+            color: #00f0ff;
+            font-weight: bold;
+        }
+
+        #radarBox {
+            width: 100%;
+            height: 70px;
+            background: #02050b;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 5px;
+            margin-top: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .config-panel {
+            position: absolute;
+            top: 315px;
+            left: 15px;
+            z-index: 10;
+            background: rgba(5, 13, 26, 0.85);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 8px;
+            border-radius: 10px;
+            backdrop-filter: blur(8px);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 210px;
+        }
+
+        .config-btn {
+            background: rgba(255, 0, 128, 0.15);
+            border: 1px solid #ff007f;
+            color: #ff007f;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 9px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .config-btn:hover {
+            background: rgba(255, 0, 128, 0.3);
+        }
+
+        .flight-controls {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 20;
+            display: flex;
+            pointer-events: auto;
+            background: rgba(5, 13, 26, 0.8);
+            padding: 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(3, 30px);
+            grid-template-rows: repeat(2, 30px);
+            gap: 3px;
+            justify-content: center;
+            align-content: center;
+        }
+
+        .flight-btn {
+            background: rgba(0, 240, 255, 0.2);
+            border: 1px solid #00f0ff;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+            transition: background 0.1s;
+        }
+
+        .flight-btn:active, .flight-btn.active {
+            background: rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 12px #00f0ff;
+        }
+
+        #btnUp { grid-column: 2; grid-row: 1; }
+        #btnLeft { grid-column: 1; grid-row: 2; }
+        #btnDown { grid-column: 2; grid-row: 2; }
+        #btnRight { grid-column: 3; grid-row: 2; }
+
+        .msg-banner {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 240, 255, 0.2);
+            border: 1px solid #00f0ff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #fff;
+            letter-spacing: 1px;
+            z-index: 15;
+            backdrop-filter: blur(8px);
+            text-align: center;
+            display: none;
+            box-shadow: 0 0 20px rgba(0,240,255,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-controls">
+        <button class="control-btn" id="audioBtn" onclick="toggleAudio()">AUDIO: OFF</button>
+        <button class="control-btn" id="homeBtn" onclick="goToHome()" style="display: none;">SALIR</button>
+    </div>
+
+    <div class="screen" id="homeScreen">
+        <h1 class="hero-title">METROPOLIS <span></span></h1>
+        <button class="access-btn" onclick="startSimulation()">ACCESO AEREOTAXI</button>
+    </div>
+
+    <div class="screen hidden" id="simScreen">
+        <div class="msg-banner" id="msgBanner">¡DESTINO ALCANZADO!</div>
+
+        <div class="hud-panel">
+            <h4>SISTEMA DE VUELO</h4>
+            <div class="hud-row">RANGO: <span id="hudRank" style="color: #ffcc00;">NOVATO</span></div>
+            <div class="hud-row">MODELO: <span id="hudModel">AERO-MK1 (Estándar)</span></div>
+            <div class="hud-row">CLIMA: <span id="hudWeather" style="color: #64ffda;">AUTOMÁTICO</span></div>
+            <div class="hud-row">RADIO: <span id="hudRadio" style="color: #ff007f;">OFF</span></div>
+            <div class="hud-row">BATERÍA: <span id="hudBattery" style="color: #64ffda;">100%</span></div>
+            <div class="hud-row">PASAJERO: <span id="hudPassenger" style="color: #ff007f;">NINGUNO</span></div>
+            <div class="hud-row">PACIENCIA: <span id="hudPatience" style="color: #64ffda;">100%</span></div>
+            <div class="hud-row">GANANCIAS: <span id="hudMoney" style="color: #64ffda;">$0</span></div>
+            <div class="hud-row">DESTINO: <span id="hudDest">LIBRE</span></div>
+            <div class="hud-row">VELOCIDAD: <span id="hudSpeed">0 KM/H</span></div>
+            <div id="radarBox">
+                <canvas id="radarCanvas" width="190" height="70"></canvas>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <button class="config-btn" onclick="cycleWeather()">CLIMA: AUTOMÁTICO</button>
+            <button class="config-btn" onclick="changeTaxiModel()">CAMBIAR MODELO TAXI</button>
+            <button class="config-btn" onclick="openShop()">TIENDA DE MEJORAS</button>
+            <button class="config-btn" onclick="toggleRadio()">RADIO CYBERPUNK: OFF</button>
+            <button class="config-btn" onclick="toggleInteriorView()" id="interiorBtn">VISTA: EXTERIOR (3ª)</button>
+            <button class="config-btn" onclick="toggleAutopilot()" id="autoBtn" style="color:#00f0ff; border-color:#00f0ff;">PILOTO AUTOMÁTICO: OFF</button>
+            <button class="config-btn" onclick="selectDestination()">SELECCIONAR DESTINO</button>
+        </div>
+
+        <div class="flight-controls">
+            <div class="control-group">
+                <button class="flight-btn" id="btnUp" ontouchstart="setMove('up', true)" ontouchend="setMove('up', false)" onmousedown="setMove('up', true)" onmouseup="setMove('up', false)">▲</button>
+                <button class="flight-btn" id="btnLeft" ontouchstart="setMove('left', true)" ontouchend="setMove('left', false)" onmousedown="setMove('left', true)" onmouseup="setMove('left', false)">◄</button>
+                <button class="flight-btn" id="btnDown" ontouchstart="setMove('down', true)" ontouchend="setMove('down', false)" onmousedown="setMove('down', true)" onmouseup="setMove('down', false)">▼</button>
+                <button class="flight-btn" id="btnRight" ontouchstart="setMove('right', true)" ontouchend="setMove('right', false)" onmousedown="setMove('right', true)" onmouseup="setMove('right', false)">►</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const radarCanvas = document.getElementById('radarCanvas');
+        const radarCtx = radarCanvas.getContext('2d');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        let gameActive = false;
+        let interiorView = false;
+        let lightTimer = 0;
+        
+        const taxi = {
+            screenX: () => window.innerWidth / 2,
+            screenY: () => window.innerHeight / 2,
+            worldX: 3000,
+            worldY: 3000,
+            vx: 0,
+            vy: 0,
+            maxSpeed: 7.5,
+            acceleration: 0.2,
+            friction: 0.94,
+            tilt: 0,
+            battery: 100,
+            maxBattery: 100,
+            hasPassenger: false,
+            passengerDestination: null,
+            patience: 100,
+            money: 500,
+            rank: 'NOVATO',
+            modelIdx: 0,
+            upgradeSpeedCount: 0,
+            upgradeBatteryCount: 0,
+            models: [
+                { name: 'AERO-MK1 (Estándar)', color: '#00f0ff', maxSpeed: 7.5, accel: 0.2 },
+                { name: 'VIP-CRUISER (Lujo)', color: '#ff007f', maxSpeed: 8.5, accel: 0.22 },
+                { name: 'INTERCEPTOR (Deportivo)', color: '#7000ff', maxSpeed: 9.8, accel: 0.26 }
+            ]
+        };
+
+        const controls = { left: false, right: false, up: false, down: false };
+        let particles = [];
+        let chargeParticles = [];
+        let weatherParticles = [];
+        let autopilot = false;
+        let currentDestination = null;
+        let timeOfDay = 0.3;
+        let timeSpeed = 0.00015;
+        
+        let weatherMode = 0; 
+        let activeWeatherState = 1; 
+        let weatherTimer = 0;
+        let lightningFlash = 0;
+        const weatherNames = ['AUTOMÁTICO', 'SOLEADO', 'LLUVIA', 'TORMENTA', 'NIEVE', 'NIEBLA'];
+
+        let buildings = [];
+        let billboards = [];
+        let giantHolograms = []; // --- NUEVO: Hologramas 3D Gigantes ---
+        let traffic = [];
+        let securityDrones = [];
+        let stops = [];
+
+        let autopilotRoute = [];
+        let routeIndex = 0;
+        let waitTimer = 0;
+
+        const windowColors = ['#00f0ff', '#ff007f', '#64ffda', '#ffcc00', '#a855f7'];
+
+        function initEnvironment() {
+            buildings = [];
+            stops = [];
+
+            for (let i = 0; i < 100; i++) {
+                let bx = Math.random() * 6000;
+                let by = Math.random() * 6000;
+                let bw = 120 + Math.random() * 80;
+                let bh = 300 + Math.random() * 400;
+
+                buildings.push({
+                    x: bx,
+                    y: by,
+                    w: bw,
+                    h: bh,
+                    color: Math.random() > 0.5 ? '#0f172a' : '#1e1b4b',
+                    windowColor: windowColors[Math.floor(Math.random() * windowColors.length)]
+                });
+            }
+
+            billboards = [];
+            let adTexts = ['NEO-COLA', 'CYBER-WEAR', 'CHROME-TECH', 'NIGHT-CITY', 'SYNTH-LIFE', '2076-FX'];
+            for (let i = 0; i < 25; i++) {
+                let targetB = buildings[Math.floor(Math.random() * buildings.length)];
+                billboards.push({
+                    x: targetB.x + (Math.random() > 0.5 ? -10 : targetB.w),
+                    y: targetB.y + Math.random() * (targetB.h - 150),
+                    w: 70,
+                    h: 30,
+                    text: adTexts[Math.floor(Math.random() * adTexts.length)],
+                    colorIndex: Math.floor(Math.random() * windowColors.length),
+                    colorTimer: Math.random() * 100
+                });
+            }
+
+            // --- NUEVO: Inicializar Hologramas 3D Gigantes Flotantes ---
+            giantHolograms = [];
+            let holoTexts = ['[ CYBER_CITY 2076 ]', '✦ KAKADONA MARKET ✦', 'RESTAURANTE LA PAKA', 'BAR CARAJILLO', 'SALA LSD'];
+            for (let i = 0; i < 15; i++) {
+                giantHolograms.push({
+                    x: Math.random() * 6000,
+                    y: Math.random() * 6000,
+                    altitude: 180 + Math.random() * 200, // Altura flotando
+                    text: holoTexts[Math.floor(Math.random() * holoTexts.length)],
+                    color: windowColors[Math.floor(Math.random() * windowColors.length)],
+                    floatSpeed: 0.02 + Math.random() * 0.03
+                });
+            }
+
+            let stopNames = ['⚡ CENTRAL DE ENERGÍA', 'P2 CASETAS', 'P3 UTEBO', 'P4 MONZALBARABA', 'P5 FERIA DE MUESTRAS'];
+            for (let i = 0; i < 5; i++) {
+                let targetB = buildings[i * 12];
+                stops.push({
+                    worldX: targetB.x + targetB.w / 2,
+                    worldY: targetB.y + targetB.w / 2,
+                    isEnergyStation: i === 0,
+                    name: stopNames[i],
+                    hasWaitingPassenger: i !== 0
+                });
+            }
+
+            traffic = [];
+            for (let i = 0; i < 35; i++) {
+                traffic.push({
+                    x: Math.random() * 6000,
+                    y: Math.random() * 6000,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    color: ['#00f0ff', '#ff007f', '#7000ff', '#64ffda', '#ffcc00'][Math.floor(Math.random() * 5)]
+                });
+            }
+
+            securityDrones = [];
+            for (let i = 0; i < 15; i++) {
+                securityDrones.push({
+                    x: Math.random() * 6000,
+                    y: Math.random() * 6000,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    radius: 18
+                });
+            }
+
+            weatherParticles = [];
+            for (let i = 0; i < 200; i++) {
+                weatherParticles.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    speed: 5 + Math.random() * 10,
+                    len: 10 + Math.random() * 20
+                });
+            }
+        }
+
+        initEnvironment();
+
+        function setMove(dir, status) { 
+            if (autopilot) return;
+            controls[dir] = status; 
+        }
+
+        window.addEventListener('keydown', e => {
+            if (autopilot) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') controls.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') controls.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w') controls.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's') controls.down = true;
+        });
+
+        window.addEventListener('keyup', e => {
+            if (autopilot) return;
+            if (e.key === 'ArrowLeft' || e.key === 'a') controls.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') controls.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w') controls.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's') controls.down = false;
+        });
+
+        function cycleWeather() {
+            weatherMode = (weatherMode + 1) % weatherNames.length;
+            if (weatherMode !== 0) {
+                activeWeatherState = weatherMode;
+            }
+            document.getElementById('hudWeather').textContent = weatherNames[weatherMode];
+            document.querySelector('.config-btn:nth-child(1)').textContent = "CLIMA: " + weatherNames[weatherMode];
+            showBanner("CLIMA FIJADO: " + weatherNames[weatherMode]);
+            playSoundEffect();
+        }
+
+        function changeTaxiModel() {
+            taxi.modelIdx = (taxi.modelIdx + 1) % taxi.models.length;
+            let currentModel = taxi.models[taxi.modelIdx];
+            taxi.maxSpeed = currentModel.maxSpeed + (taxi.upgradeSpeedCount * 0.8);
+            taxi.acceleration = currentModel.accel + (taxi.upgradeSpeedCount * 0.03);
+            
+            document.getElementById('hudModel').textContent = currentModel.name;
+            showBanner("🚀 Modelo cambiado a: " + currentModel.name);
+            playSoundEffect();
+        }
+
+        function openShop() {
+            let speedCost = 150 * (taxi.upgradeSpeedCount + 1);
+            let batteryCost = 120 * (taxi.upgradeBatteryCount + 1);
+
+            let choice = prompt(
+                `🔧 TIENDA DE MEJORAS CYBERPUNK 🔧\nSaldo actual: $${taxi.money}\n\n` +
+                `1. Mejorar Motor/Velocidad (Nivel ${taxi.upgradeSpeedCount}) - Costo: $${speedCost}\n` +
+                `2. Mejorar Capacidad de Batería (Nivel ${taxi.upgradeBatteryCount}) - Costo: $${batteryCost}\n\n` +
+                `Ingresa el número de la mejora que deseas comprar (1 o 2):`
+            );
+
+            if (choice === "1") {
+                if (taxi.money >= speedCost) {
+                    taxi.money -= speedCost;
+                    taxi.upgradeSpeedCount++;
+                    taxi.maxSpeed += 0.8;
+                    taxi.acceleration += 0.03;
+                    showBanner("⚡ ¡Motor mejorado con éxito!");
+                } else {
+                    showBanner("❌ No tienes suficiente dinero.");
+                }
+            } else if (choice === "2") {
+                if (taxi.money >= batteryCost) {
+                    taxi.money -= batteryCost;
+                    taxi.upgradeBatteryCount++;
+                    taxi.maxBattery += 30;
+                    taxi.battery = taxi.maxBattery;
+                    showBanner("🔋 ¡Batería ampliada con éxito!");
+                } else {
+                    showBanner("❌ No tienes suficiente dinero.");
+                }
+            }
+            document.getElementById('hudMoney').textContent = "$" + taxi.money;
+            playSoundEffect();
+        }
+
+        function toggleInteriorView() {
+            interiorView = !interiorView;
+            const btn = document.getElementById('interiorBtn');
+            btn.textContent = interiorView ? "VISTA: INTERIOR (CABINA)" : "VISTA: EXTERIOR (3ª)";
+            playSoundEffect();
+        }
+
+        function toggleAutopilot() {
+            autopilot = !autopilot;
+            const btn = document.getElementById('autoBtn');
+            if (autopilot) {
+                btn.textContent = "PILOTO AUTOMÁTICO: ON";
+                btn.style.background = "rgba(0, 240, 255, 0.4)";
+                
+                autopilotRoute = [stops[1], stops[2], stops[3], stops[4], stops[0]];
+                routeIndex = 0;
+                waitTimer = 0;
+                currentDestination = autopilotRoute[routeIndex];
+                document.getElementById('hudDest').textContent = currentDestination.name;
+                showBanner("Piloto automático activado (Ruta en bucle)");
+            } else {
+                btn.textContent = "PILOTO AUTOMÁTICO: OFF";
+                btn.style.background = "rgba(255, 0, 128, 0.15)";
+                document.getElementById('hudDest').textContent = "LIBRE";
+                currentDestination = null;
+            }
+            playSoundEffect();
+        }
+
+        function selectDestination() {
+            let names = stops.map((s, idx) => `${idx + 1}. ${s.name}`).join('\n');
+            let choice = prompt(`Elige tu destino:\n${names}\nIngresa el número (1 al 5):`);
+            let idx = parseInt(choice) - 1;
+            if (stops[idx]) {
+                currentDestination = stops[idx];
+                autopilot = false;
+                document.getElementById('autoBtn').textContent = "PILOTO AUTOMÁTICO: OFF";
+                document.getElementById('autoBtn').style.background = "rgba(255, 0, 128, 0.15)";
+                document.getElementById('hudDest').textContent = currentDestination.name;
+                showBanner("Destino fijado: " + currentDestination.name);
+            }
+        }
+
+        function startSimulation() {
+            document.getElementById('homeScreen').classList.add('hidden');
+            document.getElementById('simScreen').classList.remove('hidden');
+            document.getElementById('homeBtn').style.display = 'block';
+            gameActive = true;
+            taxi.worldX = 3000;
+            taxi.worldY = 3000;
+            taxi.vx = 0;
+            taxi.vy = 0;
+            taxi.battery = taxi.maxBattery;
+            taxi.money = 500;
+            taxi.hasPassenger = false;
+            taxi.patience = 100;
+            taxi.rank = 'NOVATO';
+            document.getElementById('hudRank').textContent = taxi.rank;
+            document.getElementById('hudMoney').textContent = "$" + taxi.money;
+            playSoundEffect();
+        }
+
+        function goToHome() {
+            document.getElementById('simScreen').classList.add('hidden');
+            document.getElementById('homeScreen').classList.remove('hidden');
+            document.getElementById('homeBtn').style.display = 'none';
+            gameActive = false;
+            autopilot = false;
+            if (radioActive) toggleRadio();
+        }
+
+        function updateRanks() {
+            let oldRank = taxi.rank;
+            if (taxi.money >= 1500) taxi.rank = 'PILOTO LEYENDA 👑';
+            else if (taxi.money >= 800) taxi.rank = 'PILOTO ELITE ⭐';
+            else if (taxi.money >= 300) taxi.rank = 'CONDUCTOR EXPERTO 🚀';
+            else taxi.rank = 'NOVATO';
+
+            if (oldRank !== taxi.rank) {
+                showBanner("🎉 ¡ASCENSO DE RANGO! Nuevo título: " + taxi.rank);
+            }
+            document.getElementById('hudRank').textContent = taxi.rank;
+        }
+
+        function update() {
+            if (!gameActive) return;
+
+            lightTimer++;
+
+            if (weatherMode === 0) {
+                weatherTimer++;
+                if (weatherTimer > 900) {
+                    activeWeatherState = 1 + Math.floor(Math.random() * 5);
+                    document.getElementById('hudWeather').textContent = "AUTO (" + weatherNames[activeWeatherState] + ")";
+                    weatherTimer = 0;
+                }
+            } else {
+                activeWeatherState = weatherMode;
+            }
+
+            let currentFriction = taxi.friction;
+            let windDriftX = 0;
+            let windDriftY = 0;
+
+            if (activeWeatherState === 2) {
+                windDriftX = 0.05;
+            } else if (activeWeatherState === 3) {
+                windDriftX = (Math.random() - 0.5) * 0.2;
+                windDriftY = (Math.random() - 0.5) * 0.2;
+                if (Math.random() < 0.015) lightningFlash = 12;
+            } else if (activeWeatherState === 4) {
+                currentFriction = 0.985;
+            }
+
+            if (lightningFlash > 0) lightningFlash--;
+
+            if (taxi.hasPassenger) {
+                taxi.patience = Math.max(0, taxi.patience - 0.035);
+                let patienceEl = document.getElementById('hudPatience');
+                patienceEl.textContent = Math.round(taxi.patience) + '%';
+                patienceEl.style.color = taxi.patience > 30 ? '#64ffda' : '#ff007f';
+
+                if (taxi.patience <= 0) {
+                    taxi.hasPassenger = false;
+                    taxi.passengerDestination = null;
+                    taxi.patience = 100;
+                    showBanner("😡 ¡El pasajero se bajó enfadado por tardar tanto! ($0)");
+                    document.getElementById('hudPassenger').textContent = "NINGUNO";
+                    document.getElementById('hudPatience').textContent = "100%";
+                }
+            }
+
+            if (autopilot && currentDestination) {
+                if (waitTimer > 0) {
+                    waitTimer--;
+                    taxi.vx = 0;
+                    taxi.vy = 0;
+                    taxi.tilt *= 0.85;
+
+                    if (currentDestination.isEnergyStation) {
+                        taxi.battery = Math.min(taxi.maxBattery, taxi.battery + 1.2);
+                        showBanner("⚡ RECARGANDO ENERGÍA: " + Math.round((taxi.battery / taxi.maxBattery) * 100) + "% ⚡");
+                        
+                        chargeParticles.push({
+                            x: taxi.screenX() + (Math.random() - 0.5) * 40,
+                            y: taxi.screenY() + 10,
+                            alpha: 1,
+                            speed: 1.5 + Math.random() * 1.5
+                        });
+                    }
+                    return;
+                }
+
+                let dx = currentDestination.worldX - taxi.worldX;
+                let dy = currentDestination.worldY - taxi.worldY;
+                let dist = Math.hypot(dx, dy);
+
+                if (dist > 4) {
+                    taxi.vx = (dx / dist) * Math.min(taxi.maxSpeed, dist * 0.1);
+                    taxi.vy = (dy / dist) * Math.min(taxi.maxSpeed, dist * 0.1);
+                    taxi.tilt = dx > 0 ? 0.2 : -0.2;
+                } else {
+                    taxi.worldX = currentDestination.worldX;
+                    taxi.worldY = currentDestination.worldY;
+                    taxi.vx = 0;
+                    taxi.vy = 0;
+                    taxi.tilt = 0;
+
+                    let isLastStopBeforeEnergy = (routeIndex === 3);
+                    let isEnergyStation = currentDestination.isEnergyStation;
+
+                    if (isEnergyStation) {
+                        waitTimer = 180;
+                        showBanner("⚡ RECARGA COMPLETA. INVIRTIENDO RUTA... ⚡");
+                        autopilotRoute.reverse();
+                        routeIndex = 0;
+                    } else if (isLastStopBeforeEnergy) {
+                        waitTimer = 300;
+                        showBanner("⏱️ Última parada: Esperando 5s antes de ir a recargar...");
+                        routeIndex++;
+                    } else {
+                        waitTimer = 180;
+                        showBanner("⏱️ Parada en " + currentDestination.name + " (Esperando 3s)...");
+                        routeIndex++;
+                    }
+
+                    currentDestination = isEnergyStation ? autopilotRoute[0] : autopilotRoute[routeIndex];
+                    document.getElementById('hudDest').textContent = currentDestination.name;
+                }
+            } else {
+                if (controls.left) {
+                    taxi.vx -= taxi.acceleration;
+                    taxi.tilt = Math.max(-0.3, taxi.tilt - 0.04);
+                } else if (controls.right) {
+                    taxi.vx += taxi.acceleration;
+                    taxi.tilt = Math.min(0.3, taxi.tilt + 0.04);
+                } else {
+                    taxi.vx *= currentFriction;
+                    taxi.tilt *= 0.9;
+                }
+
+                if (controls.down) taxi.vy += taxi.acceleration;
+                else if (controls.up) taxi.vy -= taxi.acceleration;
+                else taxi.vy *= currentFriction;
+
+                taxi.vx += windDriftX;
+                taxi.vy += windDriftY;
+
+                taxi.vx = Math.max(-taxi.maxSpeed, Math.min(taxi.maxSpeed, taxi.vx));
+                taxi.vy = Math.max(-taxi.maxSpeed, Math.min(taxi.maxSpeed, taxi.vy));
+            }
+
+            taxi.worldX += taxi.vx;
+            taxi.worldY += taxi.vy;
+
+            traffic.forEach(t => {
+                t.x += t.vx;
+                t.y += t.vy;
+                if (t.x < 0) t.x = 6000;
+                if (t.x > 6000) t.x = 0;
+                if (t.y < 0) t.y = 6000;
+                if (t.y > 6000) t.y = 0;
+
+                let distToTaxi = Math.hypot(taxi.worldX - t.x, taxi.worldY - t.y);
+                if (distToTaxi < 40) {
+                    taxi.battery = Math.max(0, taxi.battery - 8);
+                    showBanner("💥 ¡COLISIÓN CON OTRO AEREOTAXI! (-8% Batería)");
+                    taxi.vx *= -0.6;
+                    taxi.vy *= -0.6;
+                }
+            });
+
+            securityDrones.forEach(d => {
+                d.x += d.vx;
+                d.y += d.vy;
+                if (d.x < 0) d.x = 6000;
+                if (d.x > 6000) d.x = 0;
+                if (d.y < 0) d.y = 6000;
+                if (d.y > 6000) d.y = 0;
+
+                let distToTaxi = Math.hypot(taxi.worldX - d.x, taxi.worldY - d.y);
+                if (distToTaxi < 35) {
+                    taxi.battery = Math.max(0, taxi.battery - 5);
+                    showBanner("⚠️ ¡COLISIÓN CON DRON DE SEGURIDAD! (-5% Batería)");
+                    taxi.vx *= -0.5;
+                    taxi.vy *= -0.5;
+                }
+            });
+
+            let currentSpeed = Math.hypot(taxi.vx, taxi.vy);
+            if (currentSpeed > 0.5) {
+                taxi.battery = Math.max(0, taxi.battery - 0.004);
+                updateEngineSound(currentSpeed);
+            } else {
+                updateEngineSound(0);
+            }
+
+            if (taxi.battery <= 0) {
+                showBanner("⚠️ ¡BATERÍA AGOTADA! Te has quedado sin energía en vuelo.");
+                taxi.battery = 100;
+                taxi.worldX = stops[0].worldX;
+                taxi.worldY = stops[0].worldY;
+            }
+
+            stops.forEach(stop => {
+                let distToStop = Math.hypot(taxi.worldX - stop.worldX, taxi.worldY - stop.worldY);
+                if (distToStop < 25) {
+                    if (stop.isEnergyStation) {
+                        taxi.battery = Math.min(taxi.maxBattery, taxi.battery + 0.8);
+                        showBanner("⚡ RECARGANDO EN CENTRAL ⚡");
+                    } else if (stop.hasWaitingPassenger && !taxi.hasPassenger) {
+                        taxi.hasPassenger = true;
+                        taxi.patience = 100;
+                        stop.hasWaitingPassenger = false;
+                        let otherStops = stops.filter(s => !s.isEnergyStation && s.name !== stop.name);
+                        taxi.passengerDestination = otherStops[Math.floor(Math.random() * otherStops.length)];
+                        
+                        showBanner("¡Pasajero subido! Llévalo a: " + taxi.passengerDestination.name);
+                        document.getElementById('hudPassenger').textContent = "A BORDO";
+                    } else if (taxi.hasPassenger && taxi.passengerDestination && stop.name === taxi.passengerDestination.name) {
+                        let tip = Math.round(taxi.patience * 1.5);
+                        let earned = 150 + tip;
+
+                        taxi.hasPassenger = false;
+                        taxi.passengerDestination = null;
+                        taxi.money += earned;
+                        stop.hasWaitingPassenger = true;
+
+                        showBanner(`¡Destino alcanzado! +$150 (+$${tip} propina por velocidad)`);
+                        document.getElementById('hudPassenger').textContent = "NINGUNO";
+                        document.getElementById('hudMoney').textContent = "$" + taxi.money;
+                        document.getElementById('hudPatience').textContent = "100%";
+
+                        updateRanks();
+                    }
+                }
+            });
+
+            timeOfDay += timeSpeed;
+            if (timeOfDay > 1) timeOfDay = 0;
+
+            document.getElementById('hudSpeed').textContent = Math.round(currentSpeed * 75) + ' KM/H';
+            let batteryPercent = Math.round((taxi.battery / taxi.maxBattery) * 100);
+            let batteryEl = document.getElementById('hudBattery');
+            batteryEl.textContent = batteryPercent + '%';
+            batteryEl.style.color = batteryPercent > 30 ? '#64ffda' : '#ff007f';
+
+            if (currentSpeed > 0.5 || controls.left || controls.right) {
+                particles.push({
+                    x: taxi.screenX() + (controls.left ? 25 : (controls.right ? -25 : (Math.random() > 0.5 ? 20 : -20))),
+                    y: taxi.screenY() + 8,
+                    alpha: 1,
+                    size: 3 + Math.random() * 2
+                });
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].alpha -= 0.06;
+                if (particles[i].alpha <= 0) particles.splice(i, 1);
+            }
+
+            for (let i = chargeParticles.length - 1; i >= 0; i--) {
+                chargeParticles[i].y -= chargeParticles[i].speed;
+                chargeParticles[i].alpha -= 0.03;
+                if (chargeParticles[i].alpha <= 0) chargeParticles.splice(i, 1);
+            }
+        }
+
+        function drawRadar() {
+            radarCtx.clearRect(0, 0, radarCanvas.width, radarCanvas.height);
+            radarCtx.fillStyle = '#02050b';
+            radarCtx.fillRect(0, 0, radarCanvas.width, radarCanvas.height);
+
+            let scaleX = radarCanvas.width / 6000;
+            let scaleY = radarCanvas.height / 6000;
+
+            stops.forEach(s => {
+                radarCtx.fillStyle = s.isEnergyStation ? '#64ffda' : (s.hasWaitingPassenger ? '#ff007f' : '#00f0ff');
+                radarCtx.fillRect(s.worldX * scaleX, s.worldY * scaleY, 5, 5);
+            });
+
+            securityDrones.forEach(d => {
+                radarCtx.fillStyle = '#ffcc00';
+                radarCtx.fillRect(d.worldX * scaleX, d.worldY * scaleY, 2, 2);
+            });
+
+            traffic.forEach(t => {
+                radarCtx.fillStyle = t.color;
+                radarCtx.fillRect(t.worldX * scaleX, t.worldY * scaleY, 2, 2);
+            });
+
+            let taxiRadarX = taxi.worldX * scaleX;
+            let taxiRadarY = taxi.worldY * scaleY;
+
+            radarCtx.fillStyle = '#ffffff';
+            radarCtx.shadowBlur = 6;
+            radarCtx.shadowColor = '#00f0ff';
+            radarCtx.beginPath();
+            radarCtx.arc(taxiRadarX, taxiRadarY, 4, 0, Math.PI * 2);
+            radarCtx.fill();
+            radarCtx.shadowBlur = 0;
+        }
+
+        function drawSkyAndLighting() {
+            let brightnessFactor = (Math.sin((timeOfDay - 0.25) * Math.PI * 2) + 1) / 2;
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            
+            let rSky, gSky, bSky;
+
+            if (activeWeatherState === 1) { 
+                rSky = Math.floor(40 + brightnessFactor * 80);
+                gSky = Math.floor(100 + brightnessFactor * 120);
+                bSky = Math.floor(200 + brightnessFactor * 55);
+            } else if (activeWeatherState === 3) { 
+                rSky = 10; gSky = 12; bSky = 20;
+            } else { 
+                rSky = Math.floor(2 + brightnessFactor * 40);
+                gSky = Math.floor(5 + brightnessFactor * 70);
+                bSky = Math.floor(15 + brightnessFactor * 130);
+            }
+
+            skyGrad.addColorStop(0, `rgb(${rSky}, ${gSky}, ${bSky})`);
+            skyGrad.addColorStop(1, '#010205');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (activeWeatherState === 1) {
+                ctx.fillStyle = '#fffa65';
+                ctx.shadowBlur = 60;
+                ctx.shadowColor = '#ffa801';
+                ctx.beginPath();
+                ctx.arc(canvas.width * 0.75, canvas.height * 0.2, 45, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            if (lightningFlash > 0) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                let lx = canvas.width * 0.5 + (Math.random() - 0.5) * 400;
+                ctx.moveTo(lx, 0);
+                ctx.lineTo(lx - 40, canvas.height * 0.3);
+                ctx.lineTo(lx + 30, canvas.height * 0.6);
+                ctx.lineTo(lx - 20, canvas.height);
+                ctx.stroke();
+            }
+
+            return brightnessFactor;
+        }
+
+        function draw() {
+            let brightness = drawSkyAndLighting();
+
+            let camX = taxi.worldX - taxi.screenX();
+            let camY = taxi.worldY - taxi.screenY();
+
+            ctx.fillStyle = '#02040a';
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+
+            buildings.forEach(b => {
+                let screenX = b.x - camX;
+                let screenY = b.y - camY;
+
+                ctx.fillStyle = b.color;
+                ctx.fillRect(screenX, screenY, b.w, b.h);
+
+                let windowAlpha = activeWeatherState === 1 ? 0.2 : Math.max(0.1, 0.7 - (brightness * 0.6));
+                ctx.fillStyle = b.windowColor;
+                ctx.globalAlpha = windowAlpha;
+                for (let wy = screenY + 20; wy < screenY + b.h - 20; wy += 28) {
+                    for (let wx = screenX + 10; wx < screenX + b.w - 10; wx += 20) {
+                        ctx.fillRect(wx, wy, 6, 12);
+                    }
+                }
+                ctx.globalAlpha = 1.0;
+            });
+
+            billboards.forEach(b => {
+                b.colorTimer++;
+                if (b.colorTimer > 90) {
+                    b.colorIndex = (b.colorIndex + 1) % windowColors.length;
+                    b.colorTimer = 0;
+                }
+
+                let screenX = b.x - camX;
+                let screenY = b.y - camY;
+                let billboardColor = windowColors[b.colorIndex];
+
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.fillStyle = 'rgba(2, 5, 11, 0.85)';
+                ctx.strokeStyle = billboardColor;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = billboardColor;
+
+                ctx.fillRect(0, 0, b.w, b.h);
+                ctx.strokeRect(0, 0, b.w, b.h);
+
+                ctx.fillStyle = billboardColor;
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(b.text, b.w / 2, b.h / 2);
+                ctx.restore();
+            });
+
+            // --- NUEVO: Renderizar Hologramas 3D Gigantes Flotantes en el aire ---
+            giantHolograms.forEach((h, index) => {
+                let screenX = h.x - camX;
+                let floatOffsetY = Math.sin(lightTimer * h.floatSpeed + index) * 12; // Movimiento flotante suave
+                let screenY = (canvas.height / 2) - h.altitude + floatOffsetY;
+
+                ctx.save();
+                ctx.translate(screenX, screenY);
+
+                // Efecto holográfico translúcido y brillante
+                ctx.globalAlpha = 0.75;
+                ctx.fillStyle = 'rgba(2, 10, 25, 0.4)';
+                ctx.strokeStyle = h.color;
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = h.color;
+
+                let holoWidth = 180;
+                let holoHeight = 45;
+                ctx.fillRect(-holoWidth / 2, -holoHeight / 2, holoWidth, holoHeight);
+                ctx.strokeRect(-holoWidth / 2, -holoHeight / 2, holoWidth, holoHeight);
+
+                // Texto del holograma gigante
+                ctx.fillStyle = h.color;
+                ctx.font = 'bold 13px monospace';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(h.text, 0, 0);
+
+                ctx.restore();
+            });
+
+            stops.forEach(stop => {
+                let screenX = stop.worldX - camX;
+                let screenY = stop.worldY - camY;
+                let ringColor = stop.isEnergyStation ? '#64ffda' : (stop.hasWaitingPassenger ? '#ff007f' : '#00f0ff');
+
+                ctx.fillStyle = stop.isEnergyStation ? 'rgba(100, 255, 218, 0.3)' : 'rgba(0, 240, 255, 0.35)';
+                ctx.strokeStyle = ringColor;
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = ringColor;
+                ctx.beginPath();
+                ctx.ellipse(screenX, screenY, 60, 22, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                if (stop.hasWaitingPassenger) {
+                    ctx.fillStyle = '#ff007f';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff007f';
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY - 12, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillRect(screenX - 4, screenY - 7, 8, 12);
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                let label = stop.name + (stop.hasWaitingPassenger ? " (👤 Esperando)" : "");
+                ctx.fillText(label, screenX, screenY - 35);
+            });
+
+            traffic.forEach(t => {
+                let screenX = t.x - camX;
+                let screenY = t.y - camY;
+
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.fillStyle = t.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = t.color;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 28, 9, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            securityDrones.forEach(d => {
+                let screenX = d.x - camX;
+                let screenY = d.y - camY;
+
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.fillStyle = '#ffcc00';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#ff9900';
+                ctx.beginPath();
+                ctx.arc(0, 0, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-15, -12); ctx.lineTo(15, 12);
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            if (activeWeatherState >= 2 && activeWeatherState <= 4) {
+                ctx.strokeStyle = activeWeatherState === 4 ? '#ffffff' : 'rgba(0, 240, 255, 0.6)';
+                ctx.lineWidth = activeWeatherState === 4 ? 3 : 1.5;
+                weatherParticles.forEach(p => {
+                    p.y += p.speed;
+                    if (activeWeatherState === 2 || activeWeatherState === 3) p.x += 2;
+                    if (p.y > canvas.height) { p.y = 0; p.x = Math.random() * canvas.width; }
+
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + (activeWeatherState === 4 ? 0 : 2), p.y + p.len);
+                    ctx.stroke();
+                });
+            } else if (activeWeatherState === 5) {
+                ctx.fillStyle = 'rgba(150, 170, 190, 0.28)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            particles.forEach(p => {
+                ctx.fillStyle = '#00f0ff';
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            });
+
+            chargeParticles.forEach(cp => {
+                ctx.fillStyle = '#64ffda';
+                ctx.globalAlpha = cp.alpha;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#64ffda';
+                ctx.beginPath();
+                ctx.arc(cp.x, cp.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1.0;
+            });
+
+            let activeTarget = taxi.hasPassenger ? taxi.passengerDestination : currentDestination;
+            if (!activeTarget && !taxi.hasPassenger) {
+                let waitingStops = stops.filter(s => s.hasWaitingPassenger);
+                if (waitingStops.length > 0) activeTarget = waitingStops[0];
+            }
+
+            if (activeTarget) {
+                let dx = activeTarget.worldX - taxi.worldX;
+                let dy = activeTarget.worldY - taxi.worldY;
+                let distToTarget = Math.hypot(dx, dy);
+
+                if (distToTarget > 100) {
+                    let angle = Math.atan2(dy, dx);
+                    let screenCenterX = canvas.width / 2;
+                    let screenCenterY = canvas.height / 2;
+                    let radius = 130;
+                    let arrowX = screenCenterX + Math.cos(angle) * radius;
+                    let arrowY = screenCenterY + Math.sin(angle) * radius;
+
+                    ctx.save();
+                    ctx.translate(arrowX, arrowY);
+                    ctx.rotate(angle);
+                    ctx.fillStyle = taxi.hasPassenger ? '#ff007f' : '#00f0ff';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = taxi.hasPassenger ? '#ff007f' : '#00f0ff';
+                    ctx.beginPath();
+                    ctx.moveTo(15, 0);
+                    ctx.lineTo(-10, -10);
+                    ctx.lineTo(-10, 10);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(Math.round(distToTarget) + "m", arrowX, arrowY + 22);
+                }
+            }
+
+            if (!interiorView) {
+                ctx.save();
+                ctx.translate(taxi.screenX(), taxi.screenY());
+                ctx.rotate(taxi.tilt);
+
+                let currentModel = taxi.models[taxi.modelIdx];
+                let baseColor = currentModel.color;
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = baseColor;
+                
+                ctx.fillStyle = '#050814';
+                ctx.strokeStyle = baseColor;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, 58, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.ellipse(8, -2, 24, 11, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                if (taxi.hasPassenger) {
+                    ctx.fillStyle = '#ff007f';
+                    ctx.beginPath();
+                    ctx.arc(8, -2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                let lightsOn = Math.floor(lightTimer / 25) % 2 === 0;
+                if (lightsOn) {
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = '#ffff00';
+                    ctx.fillStyle = '#ffff00';
+                    ctx.fillRect(-45, -4, 6, 8);
+                    ctx.shadowColor = '#ff0000';
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(42, -4, 6, 8);
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.restore();
+            } else {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+                ctx.lineWidth = 6;
+                ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+                ctx.fillStyle = 'rgba(5, 10, 25, 0.9)';
+                ctx.strokeStyle = '#00f0ff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height);
+                ctx.lineTo(0, canvas.height - 130);
+                ctx.lineTo(canvas.width * 0.3, canvas.height - 180);
+                ctx.lineTo(canvas.width * 0.7, canvas.height - 180);
+                ctx.lineTo(canvas.width, canvas.height - 130);
+                ctx.lineTo(canvas.width, canvas.height);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                if (taxi.hasPassenger) {
+                    ctx.fillStyle = '#ff007f';
+                    ctx.font = 'bold 12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText("👤 PASAJERO A BORDO", canvas.width / 2, canvas.height - 100);
+                }
+
+                ctx.fillStyle = '#00f0ff';
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText("MODO CABINA // 2076", canvas.width / 2, canvas.height - 40);
+                ctx.restore();
+            }
+
+            drawRadar();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+        loop();
+
+        function showBanner(text) {
+            const banner = document.getElementById('msgBanner');
+            banner.textContent = text;
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 3000);
+        }
+
+        let audioCtx = null;
+        let isAudioOn = false;
+        let radioActive = false;
+        let radioInterval = null;
+        let engineOsc = null;
+        let engineGain = null;
+
+        function toggleAudio() {
+            isAudioOn = !isAudioOn;
+            const btn = document.getElementById('audioBtn');
+            if (isAudioOn) {
+                btn.textContent = "AUDIO: ON";
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                startEngineSound();
+            } else {
+                btn.textContent = "AUDIO: OFF";
+                if (radioActive) toggleRadio();
+                stopEngineSound();
+                if (audioCtx) { audioCtx.close(); audioCtx = null; }
+            }
+        }
+
+        function startEngineSound() {
+            if (!audioCtx) return;
+            try {
+                engineOsc = audioCtx.createOscillator();
+                engineGain = audioCtx.createGain();
+                engineOsc.type = 'sawtooth';
+                engineOsc.frequency.setValueAtTime(15, audioCtx.currentTime);
+                engineGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+                engineOsc.connect(engineGain);
+                engineGain.connect(audioCtx.destination);
+                engineOsc.start();
+            } catch(e) {}
+        }
+
+        function updateEngineSound(speed) {
+            if (!isAudioOn || !audioCtx || !engineOsc) return;
+            try {
+                let targetFreq = 15 + (speed * 18);
+                engineOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
+            } catch(e) {}
+        }
+
+        function stopEngineSound() {
+            if (engineOsc) {
+                try { engineOsc.stop(); engineOsc.disconnect(); } catch(e) {}
+                engineOsc = null;
+                engineGain = null;
+            }
+        }
+
+        function toggleRadio() {
+            if (!isAudioOn) {
+                alert("Primero debes activar el AUDIO general arriba a la derecha.");
+                return;
+            }
+            radioActive = !radioActive;
+            const radioHud = document.getElementById('hudRadio');
+            const radioBtn = document.querySelector('.config-btn:nth-child(4)');
+
+            if (radioActive) {
+                radioHud.textContent = "ACTIVADA";
+                radioBtn.textContent = "RADIO CYBERPUNK: ON";
+                radioBtn.style.color = "#64ffda";
+                radioBtn.style.borderColor = "#64ffda";
+                startSynthRadio();
+                showBanner("📻 Radio Cyberpunk encendida");
+            } else {
+                radioHud.textContent = "OFF";
+                radioBtn.textContent = "RADIO CYBERPUNK: OFF";
+                radioBtn.style.color = "#ff007f";
+                radioBtn.style.borderColor = "#ff007f";
+                clearInterval(radioInterval);
+                showBanner("📻 Radio apagada");
+            }
+        }
+
+        function startSynthRadio() {
+            let notes = [ 130.81, 146.83, 196, 220, 261.63, 293.66];
+            radioInterval = setInterval(() => {
+                if (!radioActive || !audioCtx) return;
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = Math.random() > 0.5 ? 'sawtooth' : 'square';
+                    let note = notes[Math.floor(Math.random() * notes.length)];
+                    osc.frequency.setValueAtTime(note, audioCtx.currentTime);
+                    
+                    gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } catch(e) {}
+            }, 350);
+        }
+
+        function playSoundEffect() {
+            if (!isAudioOn || !audioCtx) return;
+            try {
+                let beep = audioCtx.createOscillator();
+                let g = audioCtx.createGain();
+                beep.frequency.setValueAtTime(200, audioCtx.currentTime);
+                beep.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                beep.connect(g);
+                g.connect(audioCtx.destination);
+                beep.start();
+                beep.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+    </script>
+</body>
+</html>
