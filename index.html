@@ -511,6 +511,7 @@
                     <button class="config-btn" onclick="toggleInteriorView()" id="interiorBtn">VISTA: EXTERIOR (3ª)</button>
                     <button class="config-btn" onclick="toggleAutopilot()" id="autoBtn" style="color:#00f0ff; border-color:#00f0ff;">PILOTO AUTOMÁTICO: OFF</button>
                     <button class="config-btn" onclick="selectDestination()">SELECCIONAR DESTINO</button>
+                    <button class="config-btn" onclick="playTrainHorn(1)" style="color:#ffcc00; border-color:#ffcc00;">📯 TOCAR CLAXON TREN</button>
                 </div>
             </div>
         </div>
@@ -612,6 +613,7 @@
         let autopilotRoute = [];
         let routeIndex = 0;
         let waitTimer = 0;
+        let approachHornPlayed = false; // Control para sonar 2 veces al acercarse
 
         const windowColors = ['#00f0ff', '#ff007f', '#64ffda', '#ffcc00', '#a855f7'];
 
@@ -734,6 +736,9 @@
                 e.preventDefault();
                 setBrake(true);
             }
+            if (e.key === 'h' || e.key === 'H') {
+                playTrainHorn(1);
+            }
         });
 
         window.addEventListener('keyup', e => {
@@ -824,16 +829,20 @@
                 autopilotRoute = [stops[1], stops[2], stops[3], stops[4], stops[0]];
                 routeIndex = 0;
                 waitTimer = 0;
+                approachHornPlayed = false;
                 currentDestination = autopilotRoute[routeIndex];
                 document.getElementById('hudDest').textContent = currentDestination.name;
                 showBanner("Piloto automático activado (Ruta en bucle)");
+                // Al arrancar el piloto automático suena 1 vez el claxon de tren
+                playTrainHorn(1);
             } else {
                 btn.textContent = "PILOTO AUTOMÁTICO: OFF";
                 btn.style.background = "rgba(255, 0, 128, 0.15)";
                 document.getElementById('hudDest').textContent = "LIBRE";
                 currentDestination = null;
+                approachHornPlayed = false;
+                playSoundEffect();
             }
-            playSoundEffect();
         }
 
         function selectDestination() {
@@ -959,12 +968,24 @@
                             speed: 1.5 + Math.random() * 1.5
                         });
                     }
+
+                    // Justo al terminar la espera y arrancar hacia el siguiente destino: 1 toque de claxon
+                    if (waitTimer === 0) {
+                        playTrainHorn(1);
+                    }
+                    updateEngineSound(0);
                     return;
                 }
 
                 let dx = currentDestination.worldX - taxi.worldX;
                 let dy = currentDestination.worldY - taxi.worldY;
                 let dist = Math.hypot(dx, dy);
+
+                // Al acercarse a la estación (distancia < 260px): 2 toques de claxon
+                if (dist <= 260 && dist > 15 && !approachHornPlayed) {
+                    approachHornPlayed = true;
+                    playTrainHorn(2);
+                }
 
                 if (dist > 4) {
                     taxi.vx = (dx / dist) * Math.min(taxi.maxSpeed, dist * 0.1);
@@ -976,6 +997,7 @@
                     taxi.vx = 0;
                     taxi.vy = 0;
                     taxi.tilt = 0;
+                    approachHornPlayed = false;
 
                     let isLastStopBeforeEnergy = (routeIndex === 3);
                     let isEnergyStation = currentDestination.isEnergyStation;
@@ -985,6 +1007,8 @@
                         showBanner("⚡ RECARGA COMPLETA. INVIRTIENDO RUTA... ⚡");
                         autopilotRoute.reverse();
                         routeIndex = 0;
+                        // Al cambiar de sentido en la estación: 3 toques de claxon
+                        playTrainHorn(3);
                     } else if (isLastStopBeforeEnergy) {
                         waitTimer = 300;
                         showBanner("⏱️ Última parada: Esperando 5s antes de ir a recargar...");
@@ -1574,7 +1598,7 @@
         }
 
         /* =========================================================
-           SISTEMA DE SONIDO MELODIOSO (Web Audio API)
+           SISTEMA DE SONIDO DE TREN / AEROTREN Y CLAXON FERROVIARIO
            ========================================================= */
         let audioCtx = null;
         let isAudioOn = false;
@@ -1583,6 +1607,7 @@
         let radioStep = 0;
         let engineOsc = null;
         let engineHarmonic = null;
+        let engineSub = null;
         let engineGain = null;
 
         function toggleAudio() {
@@ -1593,7 +1618,7 @@
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
                 startEngineSound();
-                playSoundEffect();
+                playTrainHorn(1);
             } else {
                 btn.textContent = "AUDIO: OFF";
                 if (radioActive) toggleRadio();
@@ -1602,53 +1627,119 @@
             }
         }
 
+        // Motor de tren eléctrico / levitación con mayor presencia y graves profundos
         function startEngineSound() {
             if (!audioCtx) return;
             try {
+                engineSub = audioCtx.createOscillator();
                 engineOsc = audioCtx.createOscillator();
                 engineHarmonic = audioCtx.createOscillator();
                 let filter = audioCtx.createBiquadFilter();
                 engineGain = audioCtx.createGain();
 
-                engineOsc.type = 'sine';
-                engineHarmonic.type = 'triangle';
-                engineOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
-                engineHarmonic.frequency.setValueAtTime(110, audioCtx.currentTime);
+                engineSub.type = 'sine';
+                engineOsc.type = 'triangle';
+                engineHarmonic.type = 'sawtooth';
+
+                engineSub.frequency.setValueAtTime(42, audioCtx.currentTime);
+                engineOsc.frequency.setValueAtTime(84, audioCtx.currentTime);
+                engineHarmonic.frequency.setValueAtTime(126, audioCtx.currentTime);
 
                 filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(180, audioCtx.currentTime);
+                filter.frequency.setValueAtTime(240, audioCtx.currentTime);  //340
 
-                engineGain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+                // Volumen notablemente más alto y claro para el motor del tren
+                engineGain.gain.setValueAtTime(0.14, audioCtx.currentTime);
 
+                engineSub.connect(filter);
                 engineOsc.connect(filter);
                 engineHarmonic.connect(filter);
                 filter.connect(engineGain);
                 engineGain.connect(audioCtx.destination);
 
+                engineSub.start();
                 engineOsc.start();
                 engineHarmonic.start();
             } catch(e) {}
         }
 
         function updateEngineSound(speed) {
-            if (!isAudioOn || !audioCtx || !engineOsc || !engineHarmonic) return;
+            if (!isAudioOn || !audioCtx || !engineOsc || !engineHarmonic || !engineSub || !engineGain) return;
             try {
-                let baseFreq = 55 + (speed * 7);
-                engineOsc.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.15);
-                engineHarmonic.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.15);
+                let baseFreq = 42 + (speed * 6.5);
+                let targetGain = 0.12 + Math.min(0.12, speed * 0.015);
+                engineSub.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.12);
+                engineOsc.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.12);
+                engineHarmonic.frequency.setTargetAtTime(baseFreq * 3, audioCtx.currentTime, 0.12);
+                engineGain.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.15);
             } catch(e) {}
         }
 
         function stopEngineSound() {
-            if (engineOsc) {
-                try { engineOsc.stop(); engineOsc.disconnect(); } catch(e) {}
-                engineOsc = null;
-            }
-            if (engineHarmonic) {
-                try { engineHarmonic.stop(); engineHarmonic.disconnect(); } catch(e) {}
-                engineHarmonic = null;
-            }
+            [engineSub, engineOsc, engineHarmonic].forEach(osc => {
+                if (osc) {
+                    try { osc.stop(); osc.disconnect(); } catch(e) {}
+                }
+            });
+            engineSub = null;
+            engineOsc = null;
+            engineHarmonic = null;
             engineGain = null;
+        }
+
+        // Claxon bitonal realista estilo tren (acorde de bocina ferroviaria)
+        function playTrainHorn(times = 1) {
+            if (!isAudioOn || !audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            try {
+                const now = audioCtx.currentTime;
+                const blastDuration = 0.36; // Duración de cada bocinazo
+                const gap = 0.48;           // Separación entre bocinazos
+
+                for (let i = 0; i < times; i++) {
+                    const start = now + (i * gap);
+                    const end = start + blastDuration;
+
+                    // Dos trompetas de tren sonando a la vez (Fa#3 + La#3 aprox.)
+                    const hornFreqs = [185.0, 233.08];
+
+                    hornFreqs.forEach(freq => {
+                        let osc1 = audioCtx.createOscillator();
+                        let osc2 = audioCtx.createOscillator();
+                        let filter = audioCtx.createBiquadFilter();
+                        let gain = audioCtx.createGain();
+
+                        osc1.type = 'sawtooth';
+                        osc2.type = 'triangle';
+                        // Ligero desafinado natural de bocina neumática real
+                        osc1.frequency.setValueAtTime(freq, start);
+                        osc2.frequency.setValueAtTime(freq * 1.006, start);
+
+                        // Caída sutil de presión de aire al soltar el claxon
+                        osc1.frequency.exponentialRampToValueAtTime(freq * 0.96, end);
+                        osc2.frequency.exponentialRampToValueAtTime(freq * 0.965, end);
+
+                        filter.type = 'lowpass';
+                        filter.frequency.setValueAtTime(920, start);
+
+                        gain.gain.setValueAtTime(0.0001, start);
+                        gain.gain.linearRampToValueAtTime(0.11, start + 0.035);
+                        gain.gain.setValueAtTime(0.10, end - 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.0005, end);
+
+                        osc1.connect(filter);
+                        osc2.connect(filter);
+                        filter.connect(gain);
+                        gain.connect(audioCtx.destination);
+
+                        osc1.start(start);
+                        osc2.start(start);
+                        osc1.stop(end + 0.02);
+                        osc2.stop(end + 0.02);
+                    });
+                }
+            } catch(e) {}
         }
 
         function toggleRadio() {
