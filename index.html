@@ -12,6 +12,7 @@
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         body, html {
@@ -20,6 +21,7 @@
             overflow: hidden;
             background-color: #03050c;
             color: #00f0ff;
+            touch-action: none;
         }
 
         .screen {
@@ -51,11 +53,11 @@
 
         .top-controls {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 20;
+            top: 12px;
+            right: 12px;
+            z-index: 25;
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .control-btn {
@@ -84,7 +86,7 @@
         }
 
         .hero-title {
-            font-size: 3rem;
+            font-size: clamp(2rem, 8vw, 3.2rem);
             font-weight: 800;
             letter-spacing: 5px;
             margin-bottom: 30px;
@@ -102,8 +104,8 @@
             background: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%);
             border: none;
             color: #ffffff;
-            padding: 18px 45px;
-            font-size: 1.1rem;
+            padding: 16px 36px;
+            font-size: 1rem;
             font-weight: 700;
             letter-spacing: 2px;
             border-radius: 50px;
@@ -123,12 +125,21 @@
             pointer-events: none;
         }
 
-        .hud-panel {
+        .left-sidebar {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 10;
-            background: rgba(5, 13, 26, 0.85);
+            top: 12px;
+            left: 12px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 215px;
+            max-height: calc(100vh - 24px);
+            pointer-events: none;
+        }
+
+        .hud-panel {
+            background: rgba(5, 13, 26, 0.88);
             border: 1px solid rgba(0, 240, 255, 0.4);
             padding: 10px;
             border-radius: 10px;
@@ -137,18 +148,40 @@
             color: #b0c4de;
             pointer-events: auto;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            width: 210px;
+            width: 100%;
         }
 
-        .hud-panel h4 {
-            color: #ff007f;
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .panel-header h4 {
+            color: #ff007f;
             letter-spacing: 1px;
             font-size: 11px;
+            margin: 0;
+        }
+
+        .toggle-badge {
+            display: none;
+            background: rgba(0, 240, 255, 0.18);
+            border: 1px solid rgba(0, 240, 255, 0.5);
+            color: #00f0ff;
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
         }
 
         .hud-row {
             margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .hud-row span {
@@ -158,7 +191,7 @@
 
         #radarBox {
             width: 100%;
-            height: 70px;
+            height: 65px;
             background: #02050b;
             border: 1px solid rgba(0, 240, 255, 0.3);
             border-radius: 5px;
@@ -167,12 +200,14 @@
             overflow: hidden;
         }
 
+        #radarCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .config-panel {
-            position: absolute;
-            top: 315px;
-            left: 15px;
-            z-index: 10;
-            background: rgba(5, 13, 26, 0.85);
+            background: rgba(5, 13, 26, 0.88);
             border: 1px solid rgba(0, 240, 255, 0.3);
             padding: 8px;
             border-radius: 10px;
@@ -180,46 +215,56 @@
             pointer-events: auto;
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            width: 210px;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .config-buttons-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         .config-btn {
             background: rgba(255, 0, 128, 0.15);
             border: 1px solid #ff007f;
             color: #ff007f;
-            padding: 5px 10px;
+            padding: 6px 10px;
             border-radius: 5px;
-            font-size: 9px;
+            font-size: 9.5px;
             font-weight: bold;
             cursor: pointer;
             text-align: left;
             transition: all 0.2s;
+            width: 100%;
         }
 
-        .config-btn:hover {
+        .config-btn:active, .config-btn:hover {
             background: rgba(255, 0, 128, 0.3);
         }
 
         .flight-controls {
             position: absolute;
-            bottom: 15px;
-            right: 15px;
+            bottom: 18px;
+            right: 18px;
             z-index: 20;
             display: flex;
+            align-items: center;
+            gap: 8px;
             pointer-events: auto;
-            background: rgba(5, 13, 26, 0.8);
-            padding: 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 240, 255, 0.3);
+            background: rgba(5, 13, 26, 0.82);
+            padding: 8px;
+            border-radius: 14px;
+            border: 1px solid rgba(0, 240, 255, 0.35);
             backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
 
         .control-group {
             display: grid;
-            grid-template-columns: repeat(3, 30px);
-            grid-template-rows: repeat(2, 30px);
-            gap: 3px;
+            grid-template-columns: repeat(3, 38px);
+            grid-template-rows: repeat(2, 38px);
+            gap: 5px;
             justify-content: center;
             align-content: center;
         }
@@ -227,21 +272,56 @@
         .flight-btn {
             background: rgba(0, 240, 255, 0.2);
             border: 1px solid #00f0ff;
-            border-radius: 4px;
+            border-radius: 8px;
             color: #fff;
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
-            transition: background 0.1s;
+            transition: background 0.1s, transform 0.1s;
+            touch-action: none;
         }
 
         .flight-btn:active, .flight-btn.active {
-            background: rgba(0, 240, 255, 0.6);
-            box-shadow: 0 0 12px #00f0ff;
+            background: rgba(0, 240, 255, 0.65);
+            box-shadow: 0 0 14px #00f0ff;
+            transform: scale(0.94);
+        }
+
+        .brake-btn {
+            background: rgba(255, 0, 128, 0.22);
+            border: 1px solid #ff007f;
+            border-radius: 10px;
+            color: #ffcc00;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 0 10px;
+            height: 81px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.25);
+            transition: background 0.1s, transform 0.1s, box-shadow 0.1s;
+            touch-action: none;
+        }
+
+        .brake-btn span.brake-icon {
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .brake-btn:active, .brake-btn.active {
+            background: rgba(255, 0, 128, 0.65);
+            color: #ffffff;
+            box-shadow: 0 0 16px #ff007f;
+            transform: scale(0.95);
         }
 
         #btnUp { grid-column: 2; grid-row: 1; }
@@ -251,25 +331,136 @@
 
         .msg-banner {
             position: absolute;
-            top: 20px;
+            top: 16px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 240, 255, 0.2);
+            background: rgba(5, 18, 36, 0.9);
             border: 1px solid #00f0ff;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 20px;
             font-size: 11px;
             color: #fff;
-            letter-spacing: 1px;
-            z-index: 15;
+            letter-spacing: 0.8px;
+            z-index: 30;
             backdrop-filter: blur(8px);
             text-align: center;
             display: none;
-            box-shadow: 0 0 20px rgba(0,240,255,0.4);
+            box-shadow: 0 0 20px rgba(0,240,255,0.45);
+            max-width: 90vw;
+            pointer-events: none;
+        }
+
+        /* =========================================================
+           AJUSTES RESPONSIVE PARA MÓVIL (Pantallas <= 768px)
+           ========================================================= */
+        @media (max-width: 768px) {
+            .top-controls {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+            }
+
+            .control-btn {
+                padding: 10px 14px;
+                font-size: 11px;
+                border-radius: 8px;
+            }
+
+            .left-sidebar {
+                top: 10px;
+                left: 10px;
+                width: 186px;
+                gap: 6px;
+            }
+
+            .hud-panel {
+                padding: 8px 9px;
+                font-size: 9.5px;
+            }
+
+            .panel-header h4 {
+                font-size: 10px;
+            }
+
+            .toggle-badge {
+                display: inline-block;
+                padding: 3px 7px;
+                font-size: 9px;
+            }
+
+            .hud-panel.collapsed .hud-details {
+                display: none;
+            }
+
+            .config-panel.collapsed .config-buttons-list {
+                display: none;
+            }
+
+            #radarBox {
+                height: 52px;
+                margin-top: 5px;
+            }
+
+            .config-panel {
+                padding: 8px;
+            }
+
+            .config-buttons-list {
+                gap: 7px;
+            }
+
+            .config-btn {
+                padding: 10px 10px;
+                font-size: 10.5px;
+                border-radius: 7px;
+            }
+
+            .flight-controls {
+                bottom: 14px;
+                right: 12px;
+                padding: 10px;
+                gap: 8px;
+                border-radius: 16px;
+            }
+
+            .control-group {
+                grid-template-columns: repeat(3, 56px);
+                grid-template-rows: repeat(2, 56px);
+                gap: 8px;
+            }
+
+            .flight-btn {
+                font-size: 18px;
+                border-radius: 10px;
+            }
+
+            .brake-btn {
+                width: 56px;
+                height: 120px;
+                font-size: 10px;
+                border-radius: 12px;
+                padding: 0 4px;
+            }
+
+            .brake-btn span.brake-icon {
+                font-size: 18px;
+            }
+
+            .msg-banner {
+                top: auto;
+                bottom: 14px;
+                left: 10px;
+                transform: none;
+                max-width: calc(100vw - 275px);
+                text-align: left;
+                font-size: 10px;
+                padding: 8px 12px;
+                border-radius: 10px;
+            }
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div class="top-controls">
         <button class="control-btn" id="audioBtn" onclick="toggleAudio()">AUDIO: OFF</button>
@@ -284,39 +475,58 @@
     <div class="screen hidden" id="simScreen">
         <div class="msg-banner" id="msgBanner">¡DESTINO ALCANZADO!</div>
 
-        <div class="hud-panel">
-            <h4>SISTEMA DE VUELO</h4>
-            <div class="hud-row">RANGO: <span id="hudRank" style="color: #ffcc00;">NOVATO</span></div>
-            <div class="hud-row">MODELO: <span id="hudModel">AERO-MK1 (Estándar)</span></div>
-            <div class="hud-row">CLIMA: <span id="hudWeather" style="color: #64ffda;">AUTOMÁTICO</span></div>
-            <div class="hud-row">RADIO: <span id="hudRadio" style="color: #ff007f;">OFF</span></div>
-            <div class="hud-row">BATERÍA: <span id="hudBattery" style="color: #64ffda;">100%</span></div>
-            <div class="hud-row">PASAJERO: <span id="hudPassenger" style="color: #ff007f;">NINGUNO</span></div>
-            <div class="hud-row">PACIENCIA: <span id="hudPatience" style="color: #64ffda;">100%</span></div>
-            <div class="hud-row">GANANCIAS: <span id="hudMoney" style="color: #64ffda;">$0</span></div>
-            <div class="hud-row">DESTINO: <span id="hudDest">LIBRE</span></div>
-            <div class="hud-row">VELOCIDAD: <span id="hudSpeed">0 KM/H</span></div>
-            <div id="radarBox">
-                <canvas id="radarCanvas" width="190" height="70"></canvas>
+        <div class="left-sidebar">
+            <div class="hud-panel" id="hudPanel">
+                <div class="panel-header" onclick="togglePanel('hudPanel', 'hudToggleBadge')">
+                    <h4>SISTEMA DE VUELO</h4>
+                    <span class="toggle-badge" id="hudToggleBadge">OCULTAR</span>
+                </div>
+                <div class="hud-details">
+                    <div class="hud-row">RANGO: <span id="hudRank" style="color: #ffcc00;">NOVATO</span></div>
+                    <div class="hud-row">MODELO: <span id="hudModel">AERO-MK1 (Estándar)</span></div>
+                    <div class="hud-row">CLIMA: <span id="hudWeather" style="color: #64ffda;">AUTOMÁTICO</span></div>
+                    <div class="hud-row">RADIO: <span id="hudRadio" style="color: #ff007f;">OFF</span></div>
+                    <div class="hud-row">BATERÍA: <span id="hudBattery" style="color: #64ffda;">100%</span></div>
+                    <div class="hud-row">PASAJERO: <span id="hudPassenger" style="color: #ff007f;">NINGUNO</span></div>
+                    <div class="hud-row">PACIENCIA: <span id="hudPatience" style="color: #64ffda;">100%</span></div>
+                    <div class="hud-row">GANANCIAS: <span id="hudMoney" style="color: #64ffda;">$0</span></div>
+                    <div class="hud-row">DESTINO: <span id="hudDest">LIBRE</span></div>
+                    <div class="hud-row">VELOCIDAD: <span id="hudSpeed">0 KM/H</span></div>
+                </div>
+                <div id="radarBox">
+                    <canvas id="radarCanvas" width="190" height="70"></canvas>
+                </div>
+            </div>
+
+            <div class="config-panel collapsed" id="configPanel">
+                <div class="panel-header" onclick="togglePanel('configPanel', 'cfgToggleBadge')">
+                    <h4>CONTROLES / MENÚ</h4>
+                    <span class="toggle-badge" id="cfgToggleBadge">ABRIR</span>
+                </div>
+                <div class="config-buttons-list">
+                    <button class="config-btn" id="weatherBtn" onclick="cycleWeather()">CLIMA: AUTOMÁTICO</button>
+                    <button class="config-btn" onclick="changeTaxiModel()">CAMBIAR MODELO TAXI</button>
+                    <button class="config-btn" onclick="openShop()">TIENDA DE MEJORAS</button>
+                    <button class="config-btn" id="radioBtn" onclick="toggleRadio()">RADIO CYBERPUNK: OFF</button>
+                    <button class="config-btn" onclick="toggleInteriorView()" id="interiorBtn">VISTA: EXTERIOR (3ª)</button>
+                    <button class="config-btn" onclick="toggleAutopilot()" id="autoBtn" style="color:#00f0ff; border-color:#00f0ff;">PILOTO AUTOMÁTICO: OFF</button>
+                    <button class="config-btn" onclick="selectDestination()">SELECCIONAR DESTINO</button>
+                </div>
             </div>
         </div>
 
-        <div class="config-panel">
-            <button class="config-btn" onclick="cycleWeather()">CLIMA: AUTOMÁTICO</button>
-            <button class="config-btn" onclick="changeTaxiModel()">CAMBIAR MODELO TAXI</button>
-            <button class="config-btn" onclick="openShop()">TIENDA DE MEJORAS</button>
-            <button class="config-btn" onclick="toggleRadio()">RADIO CYBERPUNK: OFF</button>
-            <button class="config-btn" onclick="toggleInteriorView()" id="interiorBtn">VISTA: EXTERIOR (3ª)</button>
-            <button class="config-btn" onclick="toggleAutopilot()" id="autoBtn" style="color:#00f0ff; border-color:#00f0ff;">PILOTO AUTOMÁTICO: OFF</button>
-            <button class="config-btn" onclick="selectDestination()">SELECCIONAR DESTINO</button>
-        </div>
-
         <div class="flight-controls">
+            <button class="brake-btn" id="btnBrake"
+                ontouchstart="setBrake(true)" ontouchend="setBrake(false)" ontouchcancel="setBrake(false)"
+                onmousedown="setBrake(true)" onmouseup="setBrake(false)" onmouseleave="setBrake(false)">
+                <span class="brake-icon">⏹</span>
+                <span>FRENO</span>
+            </button>
             <div class="control-group">
-                <button class="flight-btn" id="btnUp" ontouchstart="setMove('up', true)" ontouchend="setMove('up', false)" onmousedown="setMove('up', true)" onmouseup="setMove('up', false)">▲</button>
-                <button class="flight-btn" id="btnLeft" ontouchstart="setMove('left', true)" ontouchend="setMove('left', false)" onmousedown="setMove('left', true)" onmouseup="setMove('left', false)">◄</button>
-                <button class="flight-btn" id="btnDown" ontouchstart="setMove('down', true)" ontouchend="setMove('down', false)" onmousedown="setMove('down', true)" onmouseup="setMove('down', false)">▼</button>
-                <button class="flight-btn" id="btnRight" ontouchstart="setMove('right', true)" ontouchend="setMove('right', false)" onmousedown="setMove('right', true)" onmouseup="setMove('right', false)">►</button>
+                <button class="flight-btn" id="btnUp" ontouchstart="setMove('up', true)" ontouchend="setMove('up', false)" ontouchcancel="setMove('up', false)" onmousedown="setMove('up', true)" onmouseup="setMove('up', false)" onmouseleave="setMove('up', false)">▲</button>
+                <button class="flight-btn" id="btnLeft" ontouchstart="setMove('left', true)" ontouchend="setMove('left', false)" ontouchcancel="setMove('left', false)" onmousedown="setMove('left', true)" onmouseup="setMove('left', false)" onmouseleave="setMove('left', false)">◄</button>
+                <button class="flight-btn" id="btnDown" ontouchstart="setMove('down', true)" ontouchend="setMove('down', false)" ontouchcancel="setMove('down', false)" onmousedown="setMove('down', true)" onmouseup="setMove('down', false)" onmouseleave="setMove('down', false)">▼</button>
+                <button class="flight-btn" id="btnRight" ontouchstart="setMove('right', true)" ontouchend="setMove('right', false)" ontouchcancel="setMove('right', false)" onmousedown="setMove('right', true)" onmouseup="setMove('right', false)" onmouseleave="setMove('right', false)">►</button>
             </div>
         </div>
     </div>
@@ -328,6 +538,14 @@
         const ctx = canvas.getContext('2d');
         const radarCanvas = document.getElementById('radarCanvas');
         const radarCtx = radarCanvas.getContext('2d');
+
+        function togglePanel(panelId, badgeId) {
+            if (window.innerWidth > 768) return;
+            const panel = document.getElementById(panelId);
+            const badge = document.getElementById(badgeId);
+            panel.classList.toggle('collapsed');
+            badge.textContent = panel.classList.contains('collapsed') ? 'ABRIR' : 'OCULTAR';
+        }
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -350,6 +568,7 @@
             maxSpeed: 7.5,
             acceleration: 0.2,
             friction: 0.94,
+            brakeFactor: 0.82,
             tilt: 0,
             battery: 100,
             maxBattery: 100,
@@ -368,7 +587,7 @@
             ]
         };
 
-        const controls = { left: false, right: false, up: false, down: false };
+        const controls = { left: false, right: false, up: false, down: false, brake: false };
         let particles = [];
         let chargeParticles = [];
         let weatherParticles = [];
@@ -385,7 +604,7 @@
 
         let buildings = [];
         let billboards = [];
-        let giantHolograms = []; // --- NUEVO: Hologramas 3D Gigantes ---
+        let giantHolograms = [];
         let traffic = [];
         let securityDrones = [];
         let stops = [];
@@ -431,14 +650,13 @@
                 });
             }
 
-            // --- NUEVO: Inicializar Hologramas 3D Gigantes Flotantes ---
             giantHolograms = [];
             let holoTexts = ['[ CYBER_CITY 2076 ]', '✦ KAKADONA MARKET ✦', 'RESTAURANTE LA PAKA', 'BAR CARAJILLO', 'SALA LSD'];
             for (let i = 0; i < 15; i++) {
                 giantHolograms.push({
                     x: Math.random() * 6000,
                     y: Math.random() * 6000,
-                    altitude: 180 + Math.random() * 200, // Altura flotando
+                    altitude: 180 + Math.random() * 200,
                     text: holoTexts[Math.floor(Math.random() * holoTexts.length)],
                     color: windowColors[Math.floor(Math.random() * windowColors.length)],
                     floatSpeed: 0.02 + Math.random() * 0.03
@@ -497,12 +715,25 @@
             controls[dir] = status; 
         }
 
+        function setBrake(status) {
+            if (autopilot) return;
+            controls.brake = status;
+            const btn = document.getElementById('btnBrake');
+            if (btn) {
+                btn.classList.toggle('active', status);
+            }
+        }
+
         window.addEventListener('keydown', e => {
             if (autopilot) return;
             if (e.key === 'ArrowLeft' || e.key === 'a') controls.left = true;
             if (e.key === 'ArrowRight' || e.key === 'd') controls.right = true;
             if (e.key === 'ArrowUp' || e.key === 'w') controls.up = true;
             if (e.key === 'ArrowDown' || e.key === 's') controls.down = true;
+            if (e.code === 'Space' || e.key === 'Shift') {
+                e.preventDefault();
+                setBrake(true);
+            }
         });
 
         window.addEventListener('keyup', e => {
@@ -511,6 +742,9 @@
             if (e.key === 'ArrowRight' || e.key === 'd') controls.right = false;
             if (e.key === 'ArrowUp' || e.key === 'w') controls.up = false;
             if (e.key === 'ArrowDown' || e.key === 's') controls.down = false;
+            if (e.code === 'Space' || e.key === 'Shift') {
+                setBrake(false);
+            }
         });
 
         function cycleWeather() {
@@ -519,7 +753,7 @@
                 activeWeatherState = weatherMode;
             }
             document.getElementById('hudWeather').textContent = weatherNames[weatherMode];
-            document.querySelector('.config-btn:nth-child(1)').textContent = "CLIMA: " + weatherNames[weatherMode];
+            document.getElementById('weatherBtn').textContent = "CLIMA: " + weatherNames[weatherMode];
             showBanner("CLIMA FIJADO: " + weatherNames[weatherMode]);
             playSoundEffect();
         }
@@ -582,6 +816,8 @@
             autopilot = !autopilot;
             const btn = document.getElementById('autoBtn');
             if (autopilot) {
+                controls.brake = false;
+                document.getElementById('btnBrake').classList.remove('active');
                 btn.textContent = "PILOTO AUTOMÁTICO: ON";
                 btn.style.background = "rgba(0, 240, 255, 0.4)";
                 
@@ -611,6 +847,7 @@
                 document.getElementById('autoBtn').style.background = "rgba(255, 0, 128, 0.15)";
                 document.getElementById('hudDest').textContent = currentDestination.name;
                 showBanner("Destino fijado: " + currentDestination.name);
+                playSoundEffect();
             }
         }
 
@@ -639,6 +876,7 @@
             document.getElementById('homeBtn').style.display = 'none';
             gameActive = false;
             autopilot = false;
+            controls.brake = false;
             if (radioActive) toggleRadio();
         }
 
@@ -761,23 +999,32 @@
                     document.getElementById('hudDest').textContent = currentDestination.name;
                 }
             } else {
-                if (controls.left) {
-                    taxi.vx -= taxi.acceleration;
-                    taxi.tilt = Math.max(-0.3, taxi.tilt - 0.04);
-                } else if (controls.right) {
-                    taxi.vx += taxi.acceleration;
-                    taxi.tilt = Math.min(0.3, taxi.tilt + 0.04);
+                if (controls.brake) {
+                    taxi.vx *= taxi.brakeFactor;
+                    taxi.vy *= taxi.brakeFactor;
+                    taxi.tilt *= 0.85;
+
+                    if (Math.abs(taxi.vx) < 0.08) taxi.vx = 0;
+                    if (Math.abs(taxi.vy) < 0.08) taxi.vy = 0;
                 } else {
-                    taxi.vx *= currentFriction;
-                    taxi.tilt *= 0.9;
+                    if (controls.left) {
+                        taxi.vx -= taxi.acceleration;
+                        taxi.tilt = Math.max(-0.3, taxi.tilt - 0.04);
+                    } else if (controls.right) {
+                        taxi.vx += taxi.acceleration;
+                        taxi.tilt = Math.min(0.3, taxi.tilt + 0.04);
+                    } else {
+                        taxi.vx *= currentFriction;
+                        taxi.tilt *= 0.9;
+                    }
+
+                    if (controls.down) taxi.vy += taxi.acceleration;
+                    else if (controls.up) taxi.vy -= taxi.acceleration;
+                    else taxi.vy *= currentFriction;
+
+                    taxi.vx += windDriftX;
+                    taxi.vy += windDriftY;
                 }
-
-                if (controls.down) taxi.vy += taxi.acceleration;
-                else if (controls.up) taxi.vy -= taxi.acceleration;
-                else taxi.vy *= currentFriction;
-
-                taxi.vx += windDriftX;
-                taxi.vy += windDriftY;
 
                 taxi.vx = Math.max(-taxi.maxSpeed, Math.min(taxi.maxSpeed, taxi.vx));
                 taxi.vy = Math.max(-taxi.maxSpeed, Math.min(taxi.maxSpeed, taxi.vy));
@@ -914,12 +1161,12 @@
 
             securityDrones.forEach(d => {
                 radarCtx.fillStyle = '#ffcc00';
-                radarCtx.fillRect(d.worldX * scaleX, d.worldY * scaleY, 2, 2);
+                radarCtx.fillRect(d.x * scaleX, d.y * scaleY, 2, 2);
             });
 
             traffic.forEach(t => {
                 radarCtx.fillStyle = t.color;
-                radarCtx.fillRect(t.worldX * scaleX, t.worldY * scaleY, 2, 2);
+                radarCtx.fillRect(t.x * scaleX, t.y * scaleY, 2, 2);
             });
 
             let taxiRadarX = taxi.worldX * scaleX;
@@ -1042,16 +1289,14 @@
                 ctx.restore();
             });
 
-            // --- NUEVO: Renderizar Hologramas 3D Gigantes Flotantes en el aire ---
             giantHolograms.forEach((h, index) => {
                 let screenX = h.x - camX;
-                let floatOffsetY = Math.sin(lightTimer * h.floatSpeed + index) * 12; // Movimiento flotante suave
+                let floatOffsetY = Math.sin(lightTimer * h.floatSpeed + index) * 12;
                 let screenY = (canvas.height / 2) - h.altitude + floatOffsetY;
 
                 ctx.save();
                 ctx.translate(screenX, screenY);
 
-                // Efecto holográfico translúcido y brillante
                 ctx.globalAlpha = 0.75;
                 ctx.fillStyle = 'rgba(2, 10, 25, 0.4)';
                 ctx.strokeStyle = h.color;
@@ -1064,7 +1309,6 @@
                 ctx.fillRect(-holoWidth / 2, -holoHeight / 2, holoWidth, holoHeight);
                 ctx.strokeRect(-holoWidth / 2, -holoHeight / 2, holoWidth, holoHeight);
 
-                // Texto del holograma gigante
                 ctx.fillStyle = h.color;
                 ctx.font = 'bold 13px monospace';
                 ctx.textAlign = 'center';
@@ -1197,7 +1441,7 @@
                     let angle = Math.atan2(dy, dx);
                     let screenCenterX = canvas.width / 2;
                     let screenCenterY = canvas.height / 2;
-                    let radius = 130;
+                    let radius = Math.min(130, Math.min(canvas.width, canvas.height) * 0.28);
                     let arrowX = screenCenterX + Math.cos(angle) * radius;
                     let arrowY = screenCenterY + Math.sin(angle) * radius;
 
@@ -1267,22 +1511,30 @@
                     ctx.shadowBlur = 0;
                 }
 
+                if (controls.brake) {
+                    ctx.strokeStyle = '#ffcc00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 66, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+
                 ctx.restore();
             } else {
                 ctx.save();
                 ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
                 ctx.lineWidth = 6;
-                ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+                ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
 
                 ctx.fillStyle = 'rgba(5, 10, 25, 0.9)';
                 ctx.strokeStyle = '#00f0ff';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(0, canvas.height);
-                ctx.lineTo(0, canvas.height - 130);
-                ctx.lineTo(canvas.width * 0.3, canvas.height - 180);
-                ctx.lineTo(canvas.width * 0.7, canvas.height - 180);
-                ctx.lineTo(canvas.width, canvas.height - 130);
+                ctx.lineTo(0, canvas.height - 110);
+                ctx.lineTo(canvas.width * 0.3, canvas.height - 150);
+                ctx.lineTo(canvas.width * 0.7, canvas.height - 150);
+                ctx.lineTo(canvas.width, canvas.height - 110);
                 ctx.lineTo(canvas.width, canvas.height);
                 ctx.closePath();
                 ctx.fill();
@@ -1292,13 +1544,13 @@
                     ctx.fillStyle = '#ff007f';
                     ctx.font = 'bold 12px monospace';
                     ctx.textAlign = 'center';
-                    ctx.fillText("👤 PASAJERO A BORDO", canvas.width / 2, canvas.height - 100);
+                    ctx.fillText("👤 PASAJERO A BORDO", canvas.width / 2, canvas.height - 90);
                 }
 
                 ctx.fillStyle = '#00f0ff';
-                ctx.font = 'bold 14px monospace';
+                ctx.font = 'bold 13px monospace';
                 ctx.textAlign = 'center';
-                ctx.fillText("MODO CABINA // 2076", canvas.width / 2, canvas.height - 40);
+                ctx.fillText("MODO CABINA // 2076", canvas.width / 2, canvas.height - 45);
                 ctx.restore();
             }
 
@@ -1312,18 +1564,25 @@
         }
         loop();
 
+        let bannerTimeout = null;
         function showBanner(text) {
             const banner = document.getElementById('msgBanner');
             banner.textContent = text;
             banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 3000);
+            if (bannerTimeout) clearTimeout(bannerTimeout);
+            bannerTimeout = setTimeout(() => { banner.style.display = 'none'; }, 3000);
         }
 
+        /* =========================================================
+           SISTEMA DE SONIDO MELODIOSO (Web Audio API)
+           ========================================================= */
         let audioCtx = null;
         let isAudioOn = false;
         let radioActive = false;
         let radioInterval = null;
+        let radioStep = 0;
         let engineOsc = null;
+        let engineHarmonic = null;
         let engineGain = null;
 
         function toggleAudio() {
@@ -1332,7 +1591,9 @@
             if (isAudioOn) {
                 btn.textContent = "AUDIO: ON";
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
                 startEngineSound();
+                playSoundEffect();
             } else {
                 btn.textContent = "AUDIO: OFF";
                 if (radioActive) toggleRadio();
@@ -1345,21 +1606,36 @@
             if (!audioCtx) return;
             try {
                 engineOsc = audioCtx.createOscillator();
+                engineHarmonic = audioCtx.createOscillator();
+                let filter = audioCtx.createBiquadFilter();
                 engineGain = audioCtx.createGain();
-                engineOsc.type = 'sawtooth';
-                engineOsc.frequency.setValueAtTime(15, audioCtx.currentTime);
-                engineGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-                engineOsc.connect(engineGain);
+
+                engineOsc.type = 'sine';
+                engineHarmonic.type = 'triangle';
+                engineOsc.frequency.setValueAtTime(55, audioCtx.currentTime);
+                engineHarmonic.frequency.setValueAtTime(110, audioCtx.currentTime);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(180, audioCtx.currentTime);
+
+                engineGain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+
+                engineOsc.connect(filter);
+                engineHarmonic.connect(filter);
+                filter.connect(engineGain);
                 engineGain.connect(audioCtx.destination);
+
                 engineOsc.start();
+                engineHarmonic.start();
             } catch(e) {}
         }
 
         function updateEngineSound(speed) {
-            if (!isAudioOn || !audioCtx || !engineOsc) return;
+            if (!isAudioOn || !audioCtx || !engineOsc || !engineHarmonic) return;
             try {
-                let targetFreq = 15 + (speed * 18);
-                engineOsc.frequency.setTargetAtTime(targetFreq, audioCtx.currentTime, 0.1);
+                let baseFreq = 55 + (speed * 7);
+                engineOsc.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.15);
+                engineHarmonic.frequency.setTargetAtTime(baseFreq * 2, audioCtx.currentTime, 0.15);
             } catch(e) {}
         }
 
@@ -1367,18 +1643,22 @@
             if (engineOsc) {
                 try { engineOsc.stop(); engineOsc.disconnect(); } catch(e) {}
                 engineOsc = null;
-                engineGain = null;
             }
+            if (engineHarmonic) {
+                try { engineHarmonic.stop(); engineHarmonic.disconnect(); } catch(e) {}
+                engineHarmonic = null;
+            }
+            engineGain = null;
         }
 
         function toggleRadio() {
             if (!isAudioOn) {
-                alert("Primero debes activar el AUDIO general arriba a la derecha.");
+                showBanner("🔊 Activa el AUDIO general arriba a la derecha");
                 return;
             }
             radioActive = !radioActive;
             const radioHud = document.getElementById('hudRadio');
-            const radioBtn = document.querySelector('.config-btn:nth-child(4)');
+            const radioBtn = document.getElementById('radioBtn');
 
             if (radioActive) {
                 radioHud.textContent = "ACTIVADA";
@@ -1386,7 +1666,7 @@
                 radioBtn.style.color = "#64ffda";
                 radioBtn.style.borderColor = "#64ffda";
                 startSynthRadio();
-                showBanner("📻 Radio Cyberpunk encendida");
+                showBanner("📻 Radio Ambient Cyberpunk encendida");
             } else {
                 radioHud.textContent = "OFF";
                 radioBtn.textContent = "RADIO CYBERPUNK: OFF";
@@ -1398,40 +1678,70 @@
         }
 
         function startSynthRadio() {
-            let notes = [ 130.81, 146.83, 196, 220, 261.63, 293.66];
+            const melody = [
+                220.00, 261.63, 329.63, 392.00,
+                440.00, 392.00, 329.63, 261.63,
+                174.61, 220.00, 261.63, 349.23,
+                196.00, 246.94, 293.66, 392.00
+            ];
+            radioStep = 0;
+
             radioInterval = setInterval(() => {
                 if (!radioActive || !audioCtx) return;
                 try {
+                    const now = audioCtx.currentTime;
+                    const note = melody[radioStep % melody.length];
+                    radioStep++;
+
                     let osc = audioCtx.createOscillator();
+                    let subOsc = audioCtx.createOscillator();
                     let gain = audioCtx.createGain();
-                    osc.type = Math.random() > 0.5 ? 'sawtooth' : 'square';
-                    let note = notes[Math.floor(Math.random() * notes.length)];
-                    osc.frequency.setValueAtTime(note, audioCtx.currentTime);
-                    
-                    gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-                    
+
+                    osc.type = 'sine';
+                    subOsc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note, now);
+                    subOsc.frequency.setValueAtTime(note * 0.5, now);
+
+                    gain.gain.setValueAtTime(0.0001, now);
+                    gain.gain.linearRampToValueAtTime(0.035, now + 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.75);
+
                     osc.connect(gain);
+                    subOsc.connect(gain);
                     gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
+
+                    osc.start(now);
+                    subOsc.start(now);
+                    osc.stop(now + 0.8);
+                    subOsc.stop(now + 0.8);
                 } catch(e) {}
-            }, 350);
+            }, 420);
         }
 
         function playSoundEffect() {
             if (!isAudioOn || !audioCtx) return;
             try {
-                let beep = audioCtx.createOscillator();
-                let g = audioCtx.createGain();
-                beep.frequency.setValueAtTime(200, audioCtx.currentTime);
-                beep.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
-                g.gain.setValueAtTime(0.08, audioCtx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                beep.connect(g);
-                g.connect(audioCtx.destination);
-                beep.start();
-                beep.stop(audioCtx.currentTime + 0.1);
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25];
+
+                notes.forEach((freq, idx) => {
+                    let osc = audioCtx.createOscillator();
+                    let g = audioCtx.createGain();
+                    let startTime = now + (idx * 0.07);
+
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, startTime);
+
+                    g.gain.setValueAtTime(0.0001, startTime);
+                    g.gain.linearRampToValueAtTime(0.045, startTime + 0.02);
+                    g.gain.exponentialRampToValueAtTime(0.0008, startTime + 0.25);
+
+                    osc.connect(g);
+                    g.connect(audioCtx.destination);
+
+                    osc.start(startTime);
+                    osc.stop(startTime + 0.26);
+                });
             } catch(e) {}
         }
     </script>
